@@ -1,0 +1,48 @@
+=========
+= G C S =
+=========
+
+mkdir -p -m 777 /usr/share/java/kafka-connect-gcs /etc/kafka-connect-gcs &&
+cd /usr/share/java/kafka-connect-gcs &&
+wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-gcs/versions/5.0.1/confluentinc-kafka-connect-gcs-5.0.1.zip &&
+unzip confluentinc-kafka-connect-gcs-5.0.1.zip &&
+echo '{' > /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "name": "gcs_sink_postgres",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "config": {' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "connector.class":"io.confluent.connect.gcs.GcsSinkConnector",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "tasks.max":"1",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "topics":"postgres_server.postgres_schema.postgres_table",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "gcs.bucket.name":"storage-kafka-debezium",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "gcs.part.size":"5242880",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "flush.size":"1",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "gcs.credentials.path":"/etc/kafka-connect-gcs/key.json",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "storage.class":"io.confluent.connect.gcs.storage.GcsStorage",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "format.class":"io.confluent.connect.gcs.format.avro.AvroFormat",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "partitioner.class":"io.confluent.connect.storage.partitioner.DefaultPartitioner",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "schema.compatibility":"NONE",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "confluent.topic.bootstrap.servers":"kafka:9092",' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  "confluent.topic.replication.factor":"1"' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '  }' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json &&
+echo '}' >> /etc/kafka-connect-gcs/gcs_sink_postgres.json
+
+===========
+= C U R L =
+===========
+
+curl localhost:8083/ | jq -r
+
+curl localhost:8083/connector-plugins | jq -r
+
+curl localhost:8083/connectors/ | jq -r
+
+curl localhost:8083/connectors/gcs_sink_postgres/status | jq -r
+
+curl -X PUT localhost:8083/connectors/gcs_sink_postgres/resume
+
+curl localhost:8083/connectors/gcs_sink_postgres/tasks | jq -r
+
+curl -X POST -H "Content-Type: application/json" --data @/etc/kafka-connect-gcs/gcs_sink_postgres.json localhost:8083/connectors  | jq -r
+
+curl -X DELETE localhost:8083/connectors/gcs_sink_postgres | jq -r
+
+curl -X POST localhost:8083/connectors/gcs_sink_postgres/tasks/0/restart

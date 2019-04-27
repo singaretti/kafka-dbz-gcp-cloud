@@ -1,0 +1,66 @@
+=======================
+= P o s t g r e S Q L =
+=======================
+
+yum update -y &&
+yum clean all &&
+yum install https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm -y &&
+yum install postgresql10-server postgresql10-devel postgresql10-contrib postgis25_10 postgis25_10-devel -y &&
+yum install wget autoconf automake curl file gcc gcc-c++ git libtool make pkgconfig libxml2-devel gdal-devel geos-devel unzip protobuf-c-devel.x86_64 -y &&
+/usr/pgsql-10/bin/postgresql-10-setup initdb &&
+systemctl enable postgresql-10 &&
+systemctl start postgresql-10  &&
+export PG_CONFIG=/usr/pgsql-10/bin/pg_config &&
+cd / && wget http://download.osgeo.org/proj/proj-5.2.0.tar.gz &&
+tar -xzvf proj-5.2.0.tar.gz &&
+rm -rf /proj-5.2.0.tar.gz &&
+cd /proj-5.2.0/ && ./configure && make && make install && cd / &&
+wget https://github.com/protocolbuffers/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz &&
+tar -xzvf protobuf-2.6.1.tar.gz &&
+rm -rf /protobuf-2.6.1.tar.gz &&
+cd protobuf-2.6.1/ &&
+./autogen.sh && ./configure && make && make install &&
+export PG_CONFIG=/usr/pgsql-10/bin/pg_config &&
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig &&
+cd / && wget https://codeload.github.com/protobuf-c/protobuf-c/zip/v1.2.1 &&
+unzip v1.2.1 && cd protobuf-c-1.2.1/ &&
+./autogen.sh && ./configure && make && make install &&
+cd / && git clone https://github.com/debezium/postgres-decoderbufs &&
+cd /postgres-decoderbufs/ && make && make install &&
+echo "shared_preload_libraries = 'decoderbufs'" > /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "wal_level = logical" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "max_wal_senders = 8" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "wal_keep_segments = 4" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "wal_sender_timeout = 60s" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "max_replication_slots = 4" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "listen_addresses = '*'" >> /var/lib/pgsql/10/data/postgresql.auto.conf &&
+echo "host    all             all             10.0.0.0/8              trust" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "local   all             all                                     peer" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "host    all             all             127.0.0.1/32            ident" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "host    all             all             ::1/128                 ident" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "local   replication     all                                     peer" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "host    replication     all             127.0.0.1/32            ident" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo "host    replication     all             ::1/128                 ident" >> /var/lib/pgsql/10/data/pg_hba.conf &&
+echo '/usr/local/lib/' >> /etc/ld.so.conf.d/local.conf &&
+ldconfig &&
+echo 'LANG=en_US.utf-8' >> /etc/environment &&
+echo 'LC_ALL=en_US.utf-8' >> /etc/environment &&
+systemctl restart postgresql-10.service
+
+postgres=# \d+ postgres_schema.postgres_table
+                                   Table "postgres_schema.postgres_table"
+ Column |           Type           | Collation | Nullable | Default | Storage  | Stats target | Description
+--------+--------------------------+-----------+----------+---------+----------+--------------+-------------
+ id     | integer                  |           | not null |         | plain    |              |
+ texto  | character varying        |           |          |         | extended |              |
+ data   | timestamp with time zone |           |          |         | plain    |              |
+Indexes:
+    "postgres_table_pkey" PRIMARY KEY, btree (id)
+
+create schema postgres_schema;
+create table postgres_schema.postgres_table (
+ id int,
+ texto varchar,
+ data timestamptz
+);
+alter table postgres_schema.postgres_table add primary key (id);

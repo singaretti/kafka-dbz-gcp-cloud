@@ -1,0 +1,58 @@
+===================================
+= D E B E Z I U M  |  C O N F I G =
+===================================
+
+mkdir -p -m 777 /usr/share/java/kafka-connect-postgresql /etc/kafka-connect-postgresql &&
+cd /usr/share/java/kafka-connect-postgresql &&
+wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/0.9.4.Final/debezium-connector-postgres-0.9.4.Final-plugin.tar.gz &&
+tar -xzvf debezium-connector-postgres-0.9.4.Final-plugin.tar.gz
+
+=====================================
+= D E B E Z I U M  |  C O N N E C T =
+=====================================
+
+echo '{' > /etc/kafka-connect-postgresql/postgres.json &&
+echo '  "name": "postgres",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '  "config": {' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.hostname": "postgres",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.port": "5432",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.user": "postgres",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.password": "postgres",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.dbname" : "postgres",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "database.server.name": "postgres_server",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "schema.whitelist": "postgres_schema",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "plugin.name": "decoderbufs",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "snapshot.mode": "initial",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "snapshot.lock.timeout.ms": "10000",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "slot.name": "postgres_slot",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "decimal.handling.mode": "double",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "time.precision.mode": "adaptive",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "rows.fetch.size": "13312",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "max.queue.size": "26312",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "max.batch.size": "13312",' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '    "poll.interval.ms": "1000"' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '  }' >> /etc/kafka-connect-postgresql/postgres.json &&
+echo '}' >> /etc/kafka-connect-postgresql/postgres.json
+
+===========
+= C U R L =
+===========
+
+curl localhost:8083/ | jq -r
+
+curl localhost:8083/connector-plugins | jq -r
+
+curl localhost:8083/connectors/ | jq -r
+
+curl localhost:8083/connectors/postgres/status | jq -r
+
+curl -X PUT localhost:8083/connectors/postgres/resume
+
+curl localhost:8083/connectors/postgres/tasks | jq -r
+
+curl -X POST -H "Content-Type: application/json" --data @/etc/kafka-connect-postgresql/postgres.json localhost:8083/connectors  | jq -r
+
+curl -X DELETE localhost:8083/connectors/postgres | jq -r
+
+curl -X POST localhost:8083/connectors/postgres/tasks/0/restart
