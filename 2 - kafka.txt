@@ -43,7 +43,7 @@ echo 'auto.create.topics.enable=true' >> /etc/kafka/server.properties &&
 echo 'transaction.state.log.replication.factor=1' >> /etc/kafka/server.properties &&
 echo 'transaction.state.log.min.isr=1' >> /etc/kafka/server.properties &&
 echo 'group.initial.rebalance.delay.ms=11000' >> /etc/kafka/server.properties &&
-sed -i 's/-Xms256M -Xmx2G/-Xms256M -Xmx3G/g' /usr/bin/connect-distributed
+sed -i 's/-Xmx1G -Xms4G/-Xmx4G -Xms4G/g' /usr/bin/kafka-server-start
 
 ================================
 = S C H E M A  R E G I S T R Y =
@@ -62,9 +62,7 @@ echo 'kafkastore.bootstrap.servers=PLAINTEXT://localhost:9092' >> /etc/schema-re
 cp /etc/kafka-rest/kafka-rest.properties /etc/kafka-rest/kafka-rest.properties.bkp &&
 echo 'schema.registry.url=http://localhost:8081' > /etc/kafka-rest/kafka-rest.properties &&
 echo 'bootstrap.servers=PLAINTEXT://localhost:9092' >> /etc/kafka-rest/kafka-rest.properties &&
-echo 'id=kafka-rest-test-server1' >> /etc/kafka-rest/kafka-rest.properties &&
-echo 'access.control.allow.methods=GET,POST,PUT,DELETE,OPTIONS' >> /etc/kafka-rest/kafka-rest.properties &&
-echo 'access.control.allow.origin=*' >> /etc/kafka-rest/kafka-rest.properties
+echo 'id=kafka-rest-test-server1' >> /etc/kafka-rest/kafka-rest.properties
 
 =============
 = K A F K A =
